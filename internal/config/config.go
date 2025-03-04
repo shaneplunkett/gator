@@ -13,8 +13,16 @@ type Config struct {
 	CurrentUserName string `json:"current_user_name"`
 }
 
-func (c Config) SetUser() {
-
+func (cfg Config) SetUser(u string) error {
+	f, err := Read()
+	if err != nil {
+		return err
+	}
+	f.CurrentUserName = u
+	if err = write(f); err != nil {
+		return err
+	}
+	return nil
 }
 
 func getConfigFilePath() (string, error) {
@@ -36,8 +44,21 @@ func Read() (*Config, error) {
 	}
 	var data Config
 	if err = json.Unmarshal(f, &data); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to unmarshal Config JSON")
 	}
 
 	return &data, nil
+}
+
+func write(cfg *Config) error {
+	jsonBlob, err := json.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("Failed to Marshal Write")
+	}
+	p, _ := getConfigFilePath()
+	if err = os.WriteFile(p, jsonBlob, 0644); err != nil {
+		return fmt.Errorf("Failed to write to file")
+	}
+
+	return nil
 }
