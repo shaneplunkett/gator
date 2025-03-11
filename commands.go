@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"database/sql"
+	"time"
+
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/shaneplunkett/gator/internal/config"
 	"github.com/shaneplunkett/gator/internal/database"
-	"time"
 )
 
 type command struct {
@@ -69,7 +70,15 @@ func handlerRegister(s *state, cmd command) error {
 	} else if err != sql.ErrNoRows {
 		log.Fatalf("Error checking for user: %v", err)
 	}
-	user, err := s.db.CreateUser(context.Background(), database.CreateUserParams{ID: uuid.New(), CreatedAt: time.Now(), UpdatedAt: time.Now(), Name: cmd.arguements[0]})
+	user, err := s.db.CreateUser(
+		context.Background(),
+		database.CreateUserParams{
+			ID:        uuid.New(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Name:      cmd.arguements[0],
+		},
+	)
 	if err != nil {
 		log.Fatalf("Error creating user: %v", err)
 	}
