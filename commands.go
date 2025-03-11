@@ -2,7 +2,9 @@ package main
 
 import (
 	"github.com/charmbracelet/log"
+	_ "github.com/lib/pq"
 	"github.com/shaneplunkett/gator/internal/config"
+	"github.com/shaneplunkett/gator/internal/database"
 )
 
 type command struct {
@@ -11,6 +13,7 @@ type command struct {
 }
 
 type state struct {
+	db     *database.Queries
 	config *config.Config
 }
 
@@ -45,3 +48,5 @@ func handlerLogin(s *state, cmd command) error {
 
 	return nil
 }
+
+func handlerRegister(s *state, cmd command) error
