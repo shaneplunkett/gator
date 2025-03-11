@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"github.com/charmbracelet/log"
-	_ "github.com/lib/pq"
+	"github.com/google/uuid"
 	"github.com/shaneplunkett/gator/internal/config"
 	"github.com/shaneplunkett/gator/internal/database"
+	"time"
 )
 
 type command struct {
@@ -40,7 +43,11 @@ func handlerLogin(s *state, cmd command) error {
 	if len(cmd.arguements) > 1 {
 		log.Fatalf("Login only accepts one arguement")
 	}
-	err := s.config.SetUser(cmd.arguements[0])
+	_, err := s.db.GetUser(context.Background(), cmd.arguements[0])
+	if err != nil {
+		log.Fatalf("User does not exist: %v", err)
+	}
+	err = s.config.SetUser(cmd.arguements[0])
 	if err != nil {
 		return err
 	}
@@ -49,4 +56,28 @@ func handlerLogin(s *state, cmd command) error {
 	return nil
 }
 
-//func handlerRegister(s *state, cmd command) error
+func handlerRegister(s *state, cmd command) error {
+	if cmd.arguements == nil {
+		log.Fatalf("Username arguement required")
+	}
+	if len(cmd.arguements) > 1 {
+		log.Fatalf("Register only accepts one arguement")
+	}
+	_, err := s.db.GetUser(context.Background(), cmd.arguements[0])
+	if err == nil {
+		log.Fatalf("User already exists")
+	} else if err != sql.ErrNoRows {
+		log.Fatalf("Error checking for user: %v", err)
+	}
+	user, err := s.db.CreateUser(context.Background(), database.CreateUserParams{ID: uuid.New(), CreatedAt: time.Now(), UpdatedAt: time.Now(), Name: cmd.arguements[0]})
+	if err != nil {
+		log.Fatalf("Error creating user: %v", err)
+	}
+	err = s.config.SetUser(cmd.arguements[0])
+	if err != nil {
+		return err
+	}
+	log.Infof("User Successfully Created: %s", user)
+
+	return nil
+}

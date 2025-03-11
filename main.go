@@ -17,7 +17,8 @@ func main() {
 	}
 
 	dburl := os.Getenv("DATABASE_URL")
-	db, err := sql.Open("postgres", os.Getenv(dburl))
+	log.Infof("Database URL: %v", dburl)
+	db, err := sql.Open("postgres", dburl)
 	if err != nil {
 		log.Fatalf("Unable to connect to DB: %v", err)
 	}
@@ -31,7 +32,7 @@ func main() {
 	cmds := commands{make(map[string]func(*state, command) error)}
 
 	cmds.register("login", handlerLogin)
-	//cmds.register("register", handlerRegister)
+	cmds.register("register", handlerRegister)
 
 	args := os.Args[1:]
 	if len(args) < 2 {
