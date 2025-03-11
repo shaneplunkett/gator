@@ -49,4 +49,4 @@ func handlerLogin(s *state, cmd command) error {
 	return nil
 }
 
-func handlerRegister(s *state, cmd command) error
+//func handlerRegister(s *state, cmd command) error

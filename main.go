@@ -3,16 +3,21 @@ package main
 import (
 	"database/sql"
 	"github.com/charmbracelet/log"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/shaneplunkett/gator/internal/config"
 	"github.com/shaneplunkett/gator/internal/database"
 	"os"
 )
 
-const dburl = "postgres://shane:@localhost:5432/gator"
-
 func main() {
-	db, err := sql.Open("postgres", dburl)
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
+	dburl := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", os.Getenv(dburl))
 	if err != nil {
 		log.Fatalf("Unable to connect to DB: %v", err)
 	}
@@ -26,7 +31,7 @@ func main() {
 	cmds := commands{make(map[string]func(*state, command) error)}
 
 	cmds.register("login", handlerLogin)
-	cmds.register("register", handlerRegister)
+	//cmds.register("register", handlerRegister)
 
 	args := os.Args[1:]
 	if len(args) < 2 {
