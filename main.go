@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/shaneplunkett/gator/internal/config"
 	"os"
 )
@@ -9,8 +9,7 @@ import (
 func main() {
 	config, err := config.Read()
 	if err != nil {
-		fmt.Printf("Error Reading Config: %s", err)
-		os.Exit(1)
+		log.Fatalf("Error Reading Config: %v", err)
 	}
 	s := &state{config: config}
 	cmds := commands{make(map[string]func(*state, command) error)}
@@ -19,8 +18,7 @@ func main() {
 
 	args := os.Args[1:]
 	if len(args) < 2 {
-		fmt.Printf("Not Enough Arguments provided: %s\n", args)
-		os.Exit(1)
+		log.Fatalf("Usage: cli <command> [args...]")
 	}
 
 	cmdarg := args[0]
@@ -28,7 +26,6 @@ func main() {
 	comm := command{name: cmdarg, arguements: argList}
 	err = cmds.run(s, comm)
 	if err != nil {
-		fmt.Printf("Command Failed: %s\n", err)
+		log.Fatal(err)
 	}
-	os.Exit(0)
 }

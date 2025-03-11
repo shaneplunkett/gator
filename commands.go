@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/shaneplunkett/gator/internal/config"
 )
 
@@ -23,25 +23,25 @@ func (c *commands) register(name string, f func(*state, command) error) {
 }
 
 func (c *commands) run(s *state, cmd command) error {
-	command, exist := c.list[cmd.name]
+	handler, exist := c.list[cmd.name]
 	if !exist {
-		return fmt.Errorf("Unknown command: %s", cmd.name)
+		log.Fatalf("Unknown command: %s", cmd.name)
 	}
-	return command(s, cmd)
+	return handler(s, cmd)
 }
 
 func handlerLogin(s *state, cmd command) error {
 	if cmd.arguements == nil {
-		return fmt.Errorf("Username arguement required")
+		log.Fatalf("Username arguement required")
 	}
 	if len(cmd.arguements) > 1 {
-		return fmt.Errorf("Login only accepts one arguement")
+		log.Fatalf("Login only accepts one arguement")
 	}
 	err := s.config.SetUser(cmd.arguements[0])
 	if err != nil {
 		return err
 	}
-	fmt.Printf("User has been set to: %s\n", cmd.arguements[0])
+	log.Infof("User has been set to: %s\n", cmd.arguements[0])
 
 	return nil
 }
