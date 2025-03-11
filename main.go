@@ -2,12 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"os"
+
 	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/shaneplunkett/gator/internal/config"
 	"github.com/shaneplunkett/gator/internal/database"
-	"os"
 )
 
 func main() {
