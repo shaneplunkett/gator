@@ -34,17 +34,32 @@ func main() {
 
 	cmds.register("login", handlerLogin)
 	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
 
 	args := os.Args[1:]
-	if len(args) < 2 {
+	if len(args) == 0 {
 		log.Fatalf("Usage: cli <command> [args...]")
 	}
 
 	cmdarg := args[0]
-	argList := args[1:]
-	comm := command{name: cmdarg, arguements: argList}
-	err = cmds.run(s, comm)
-	if err != nil {
-		log.Fatal(err)
+
+	switch cmdarg {
+	case "reset":
+		resetcomm := command{name: cmdarg, arguments: nil}
+		err = cmds.run(s, resetcomm)
+		if err != nil {
+			log.Fatal(err)
+		}
+	default:
+		if len(args) < 2 {
+			log.Fatalf("Usage: cli <command> [args...]")
+		}
+
+		argList := args[1:]
+		comm := command{name: cmdarg, arguments: argList}
+		err = cmds.run(s, comm)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }

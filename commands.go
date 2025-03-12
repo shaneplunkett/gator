@@ -12,8 +12,8 @@ import (
 )
 
 type command struct {
-	name       string
-	arguements []string
+	name      string
+	arguments []string
 }
 
 type state struct {
@@ -38,33 +38,33 @@ func (c *commands) run(s *state, cmd command) error {
 }
 
 func handlerLogin(s *state, cmd command) error {
-	if cmd.arguements == nil {
+	if cmd.arguments == nil {
 		log.Fatalf("Username arguement required")
 	}
-	if len(cmd.arguements) > 1 {
+	if len(cmd.arguments) > 1 {
 		log.Fatalf("Login only accepts one arguement")
 	}
-	_, err := s.db.GetUser(context.Background(), cmd.arguements[0])
+	_, err := s.db.GetUser(context.Background(), cmd.arguments[0])
 	if err != nil {
 		log.Fatalf("User does not exist: %v", err)
 	}
-	err = s.config.SetUser(cmd.arguements[0])
+	err = s.config.SetUser(cmd.arguments[0])
 	if err != nil {
 		return err
 	}
-	log.Infof("User has been set to: %s\n", cmd.arguements[0])
+	log.Infof("User has been set to: %s\n", cmd.arguments[0])
 
 	return nil
 }
 
 func handlerRegister(s *state, cmd command) error {
-	if cmd.arguements == nil {
+	if cmd.arguments == nil {
 		log.Fatalf("Username arguement required")
 	}
-	if len(cmd.arguements) > 1 {
+	if len(cmd.arguments) > 1 {
 		log.Fatalf("Register only accepts one arguement")
 	}
-	_, err := s.db.GetUser(context.Background(), cmd.arguements[0])
+	_, err := s.db.GetUser(context.Background(), cmd.arguments[0])
 	if err == nil {
 		log.Fatalf("User already exists")
 	} else if err != sql.ErrNoRows {
@@ -76,17 +76,30 @@ func handlerRegister(s *state, cmd command) error {
 			ID:        uuid.New(),
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
-			Name:      cmd.arguements[0],
+			Name:      cmd.arguments[0],
 		},
 	)
 	if err != nil {
 		log.Fatalf("Error creating user: %v", err)
 	}
-	err = s.config.SetUser(cmd.arguements[0])
+	err = s.config.SetUser(cmd.arguments[0])
 	if err != nil {
 		return err
 	}
 	log.Infof("User Successfully Created: %s", user)
+
+	return nil
+}
+
+func handlerReset(s *state, cmd command) error {
+	if cmd.arguments != nil {
+		log.Fatalf("Reset does not accept any arguments")
+	}
+	err := s.db.DeleteUser(context.Background())
+	if err != nil {
+		log.Fatalf("Error deleting user table: %v", err)
+	}
+	log.Info("User table deleted successfully")
 
 	return nil
 }
