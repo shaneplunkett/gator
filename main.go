@@ -17,49 +17,40 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	dburl := os.Getenv("DATABASE_URL")
-	log.Infof("Database URL: %v", dburl)
-	db, err := sql.Open("postgres", dburl)
-	if err != nil {
-		log.Fatalf("Unable to connect to DB: %v", err)
-	}
-	dbQueries := database.New(db)
-
 	config, err := config.Read()
 	if err != nil {
 		log.Fatalf("Error Reading Config: %v", err)
 	}
+
+	dburl := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", dburl)
+	if err != nil {
+		log.Fatalf("Unable to connect to DB: %v", err)
+	}
+	defer db.Close()
+	dbQueries := database.New(db)
+
 	s := &state{db: dbQueries, config: config}
+
 	cmds := commands{make(map[string]func(*state, command) error)}
 
 	cmds.register("login", handlerLogin)
 	cmds.register("register", handlerRegister)
 	cmds.register("reset", handlerReset)
+	cmds.register("users", handlerUsers)
+	cmds.register("agg", handlerAgg)
 
-	args := os.Args[1:]
-	if len(args) == 0 {
-		log.Fatalf("Usage: cli <command> [args...]")
+	if len(os.Args) < 2 {
+		log.Fatal("Usage: cli <command> [args...]")
+		return
 	}
 
-	cmdarg := args[0]
+	cmdName := os.Args[1]
+	cmdArgs := os.Args[2:]
 
-	switch cmdarg {
-	case "reset":
-		resetcomm := command{name: cmdarg, arguments: nil}
-		err = cmds.run(s, resetcomm)
-		if err != nil {
-			log.Fatal(err)
-		}
-	default:
-		if len(args) < 2 {
-			log.Fatalf("Usage: cli <command> [args...]")
-		}
-
-		argList := args[1:]
-		comm := command{name: cmdarg, arguments: argList}
-		err = cmds.run(s, comm)
-		if err != nil {
-			log.Fatal(err)
-		}
+	comm := command{name: cmdName, arguments: cmdArgs}
+	err = cmds.run(s, comm)
+	if err != nil {
+		log.Fatal(err)
 	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -38,11 +39,8 @@ func (c *commands) run(s *state, cmd command) error {
 }
 
 func handlerLogin(s *state, cmd command) error {
-	if cmd.arguments == nil {
-		log.Fatalf("Username arguement required")
-	}
-	if len(cmd.arguments) > 1 {
-		log.Fatalf("Login only accepts one arguement")
+	if len(cmd.arguments) != 1 {
+		return fmt.Errorf("Usage: %v <name>", cmd.name)
 	}
 	_, err := s.db.GetUser(context.Background(), cmd.arguments[0])
 	if err != nil {
@@ -58,11 +56,8 @@ func handlerLogin(s *state, cmd command) error {
 }
 
 func handlerRegister(s *state, cmd command) error {
-	if cmd.arguments == nil {
-		log.Fatalf("Username arguement required")
-	}
-	if len(cmd.arguments) > 1 {
-		log.Fatalf("Register only accepts one arguement")
+	if len(cmd.arguments) != 1 {
+		return fmt.Errorf("Usage: %v <name>", cmd.name)
 	}
 	_, err := s.db.GetUser(context.Background(), cmd.arguments[0])
 	if err == nil {
@@ -92,14 +87,26 @@ func handlerRegister(s *state, cmd command) error {
 }
 
 func handlerReset(s *state, cmd command) error {
-	if cmd.arguments != nil {
-		log.Fatalf("Reset does not accept any arguments")
-	}
 	err := s.db.DeleteUser(context.Background())
 	if err != nil {
 		log.Fatalf("Error deleting user table: %v", err)
 	}
-	log.Info("User table deleted successfully")
+	log.Info("User table cleared successfully")
 
+	return nil
+}
+
+func handlerUsers(s *state, cmd command) error {
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		log.Fatalf("Error getting users: %v", err)
+	}
+	for _, user := range users {
+		if user.Name == s.config.CurrentUserName {
+			fmt.Printf("* %v (current)\n", user.Name)
+		} else {
+			fmt.Printf("* %v\n", user.Name)
+		}
+	}
 	return nil
 }
