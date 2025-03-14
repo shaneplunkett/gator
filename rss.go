@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"encoding/xml"
-	"fmt"
 	"html"
 	"net/http"
+	"time"
 
 	"github.com/charmbracelet/log"
 )
@@ -27,6 +27,9 @@ type RSSItem struct {
 }
 
 func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
+	httpClient := http.Client{
+		Timeout: 10 * time.Second,
+	}
 	req, err := http.NewRequestWithContext(ctx, "GET", feedURL, nil)
 	if err != nil {
 		log.Errorf("Error generating Request: %v", err)
@@ -34,8 +37,7 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	}
 
 	req.Header.Set("User-Agent", "gator")
-	client := http.Client{}
-	res, err := client.Do(req)
+	res, err := httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Error Making Request: %v", err)
 		return nil, err
@@ -48,30 +50,14 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	feed.Channel.Title = html.UnescapeString(feed.Channel.Title)
 	feed.Channel.Description = html.UnescapeString(feed.Channel.Description)
-
-	for i := range feed.Channel.Item {
-		feed.Channel.Item[i].Title = html.UnescapeString(feed.Channel.Item[i].Title)
-		feed.Channel.Item[i].Description = html.UnescapeString(feed.Channel.Item[i].Description)
+	for i, item := range feed.Channel.Item {
+		item.Title = html.UnescapeString(item.Title)
+		item.Description = html.UnescapeString(item.Description)
+		feed.Channel.Item[i] = item
 	}
+
 	return &feed, nil
-}
-
-func handlerAgg(s *state, cmd command) error {
-	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
-	if err != nil {
-		log.Fatalf("Failed to Fetch Feed: %v", err)
-	}
-	fmt.Printf("Channel Title: %s\n", feed.Channel.Title)
-	fmt.Printf("Channel Link: %s\n", feed.Channel.Link)
-	fmt.Printf("Channel Description: %s\n", feed.Channel.Description)
-	for i := range feed.Channel.Item {
-		fmt.Printf("Item Title: %s\n", feed.Channel.Item[i].Title)
-		fmt.Printf("Item Link: %s\n", feed.Channel.Item[i].Link)
-		fmt.Printf("Item Description: %s\n", feed.Channel.Item[i].Description)
-		fmt.Printf("Item PubDate: %s\n", feed.Channel.Item[i].PubDate)
-	}
-
-	return nil
 }
