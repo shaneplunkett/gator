@@ -120,3 +120,27 @@ func handlerAgg(s *state, cmd command) error {
 
 	return nil
 }
+
+func handlerFeed(s *state, cmd command) error {
+	if len(cmd.arguments) != 2 {
+		return fmt.Errorf("Usage: %v <name> <url>", cmd.name)
+	}
+	user, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
+	if err != nil {
+		log.Fatalf("Unable to get user: %v", err)
+	}
+	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      cmd.arguments[0],
+		Url:       cmd.arguments[1],
+		UserID:    user.ID,
+	})
+	if err != nil {
+		log.Fatalf("Unable to generate feed: %v", err)
+	}
+	fmt.Printf("Feed: %+v\n", feed)
+
+	return nil
+}
