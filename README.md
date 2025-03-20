@@ -8,8 +8,8 @@ Gator is a guided project from [Boot.dev](https://www.boot.dev/courses/build-blo
 
 ## Setup
 
-- Copy .env template file and populate with db details
-- run `goose postgres <dburl> migrate up` from `sql\schema` directory
+1. Copy .env template file and populate with db details
+2. run `goose postgres <dburl> migrate up` from `sql\schema` directory
 
 ## Usage
 
