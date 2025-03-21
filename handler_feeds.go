@@ -109,6 +109,21 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 	return nil
 }
 
+func handlerUnfollow(s *state, cmd command, user database.User) error {
+	if len(cmd.arguments) != 1 {
+		return fmt.Errorf("Usage: %v <url>", cmd.name)
+	}
+	err := s.db.DeleteFeedFollow(context.Background(), database.DeleteFeedFollowParams{
+		Url:    cmd.arguments[0],
+		UserID: user.ID,
+	})
+	if err != nil {
+		log.Fatalf("Failed to unfollow Feed: %v", err)
+	}
+
+	return nil
+}
+
 func handlerAgg(s *state, cmd command) error {
 	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
 	if err != nil {
