@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/xml"
+	"fmt"
 	"html"
 	"net/http"
 	"time"
+
+	"github.com/shaneplunkett/gator/internal/database"
 
 	"github.com/charmbracelet/log"
 )
@@ -60,4 +64,30 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	}
 
 	return &feed, nil
+}
+
+func scrapeFeeds(s *state) error {
+	next, err := s.db.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to get Next Feed: %v", err)
+	}
+	err = s.db.MarkFeedFetched(context.Background(), database.MarkFeedFetchedParams{
+		ID: next.ID,
+		LastFetchedAt: sql.NullTime{
+			Time: time.Now(),
+		},
+		UpdatedAt: time.Now(),
+	})
+	if err != nil {
+		log.Fatalf("Failed Mark Feed Fetched: %v", err)
+	}
+	feed, err := fetchFeed(context.Background(), next.Url)
+	if err != nil {
+		log.Fatalf("Failed to Fetch Feed: %v", err)
+	}
+	for _, item := range feed.Channel.Item {
+		fmt.Printf("* Title: %s\n", item.Title)
+	}
+
+	return nil
 }

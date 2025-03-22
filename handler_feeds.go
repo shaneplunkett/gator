@@ -92,6 +92,7 @@ func handlerFollow(s *state, cmd command, user database.User) error {
 	if err != nil {
 		log.Fatalf("Unable to follow feed: %v", err)
 	}
+	fmt.Println("Feed Followed Successfully")
 	fmt.Printf("Feed Name: %v\n", feed_follow.FeedName)
 	fmt.Printf("User Name: %v\n", feed_follow.UserName)
 
@@ -103,6 +104,12 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 	if err != nil {
 		log.Fatalf("Failed to get Followed Feeds for User: %v", err)
 	}
+
+	if len(feeds) == 0 {
+		fmt.Println("No feeds found")
+		return nil
+	}
+
 	for _, feed := range feeds {
 		fmt.Printf("* Name:        %s\n", feed.Name)
 	}
@@ -120,16 +127,24 @@ func handlerUnfollow(s *state, cmd command, user database.User) error {
 	if err != nil {
 		log.Fatalf("Failed to unfollow Feed: %v", err)
 	}
+	log.Info("Feed unfollowed successfully!\n")
 
 	return nil
 }
 
 func handlerAgg(s *state, cmd command) error {
-	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
-	if err != nil {
-		log.Fatalf("Failed to Fetch Feed: %v", err)
+	if len(cmd.arguments) != 1 {
+		return fmt.Errorf("Usage: %v <request interval seconds>", cmd.name)
 	}
-	fmt.Printf("Feed: %+v\n", feed)
-
-	return nil
+	timeBetweenRequests, err := time.ParseDuration(cmd.arguments[0])
+	if err != nil {
+		log.Fatalf("Unable to Parse Duration: %v", err)
+	}
+	ticker := time.NewTicker(timeBetweenRequests)
+	for ; ; <-ticker.C {
+		err := scrapeFeeds(s)
+		if err != nil {
+			log.Fatalf("Unable to Scrape Feeds: %v", err)
+		}
+	}
 }
